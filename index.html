@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Vitamin D Widget</title>
+  <style>
+
+    #worldMap {
+      font-family: monospace;
+      white-space: pre;
+      text-align: center;
+      margin-top: 0px;
+    }
+    #container {
+      width: 500px;
+      height: 380px;
+      border: 0px solid black;
+      position: relative;
+    }
+
+    #line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 180px; /* Initial position */
+      height: 20px; /* Updated thickness */
+      background-color: black;
+      cursor: ns-resize;
+    }
+
+    #latitude {
+      position: absolute;
+      font-size: 14px;
+      left: 200px;
+      color: white; /* Text color set to white */
+      transform: translateY(0%); /* Adjust vertical alignment */
+      top: 190px; /* Initial position */
+    }
+
+    #skin-tone-slider {
+        width: 500px;*/
+        height: 50px;
+        margin-top: 10px;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+    }
+
+
+    #skin-tone-color {
+        width: 500px;
+        height: 50px;
+        margin-top: 10px;
+        border-radius: 5px;
+    }
+
+    #adviceBox {
+      width: 500px;
+      border: 1px dotted black;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+  </style>
+</head>
+<body>
+  
+  <div id="container">
+    <div id="worldMap"></div>
+    <div id="line"></div>
+  </div>
+  <div id="latitude">Latitude: 0</div>
+  <p>========================================================</p>
+  <p>
+    <div>
+      <p>
+        <label for="skin-tone-slider">Choose your skin tone:</label>
+        <p><input type="range" id="skin-tone-slider" min="1" max="6" step="1" value="3"></p>
+        <p id="skin-tone-value"></p>
+      </p>
+      <div id="skin-tone-color"></div>
+    </div>
+  </p>
+
+  <p>
+    <h2>Vitamin D Recommendation</h2>
+    <div id="adviceBox">
+      <div id="adviceText">
+      </div>
+    </div>
+  </p>
+
+  
+</body>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const worldMap = document.getElementById("worldMap");
+      const container = document.getElementById("container");
+      const line = document.getElementById("line");
+      const latitude = document.getElementById("latitude");
+
+// ASCII world map
+      const asciiMap = `+-+-+-+-+-+-+-+-+-+-+-+-+----+----+-----+-----+-----+-----+-----+-----+
+|p|h|a|r|m|i|f|y|.|c|o|m|"-"._       \|7       ,     _,.__             \|
++-+-+-+-+-+-+-+-+-+-+-+-+    /        _._     \`_ ,_/  '  '-._.---.-.__\|
+\|.{     " " \`-==,',._\\{  \\  / {)     / _ ">_,-' \`                mt-2_\|
++ \\_.:--.       \`._ )\`^-. "'      , [_/(                       __,/-' +
+\|'"'     \\         "    _L       oD_,--'                )     /. (\|   \|
+\|         \|           ,'         _)_.\\\\._<> 6              _,' /  '   \|
+\|         \`.         /          [_/_'\` \`"(                <'}  )      \|
++30N       \\\\    .-. )          /   \`-'"..' \`:._          _)  '       +
+\|   \`        \\  (  \`(          /         \`:\\  > \\  ,-^.  /' '         \|
+\|             \`._,   ""        \|           \\\`'   \\\|   ?_)  {\\         \|
+\|                \`=.---.       \`._._       ,'     "\`  \|' ,- '.        \|
++000               \|    \`-._        \|     /          \`:\`<_\|h--._      +
+\|                  (        >       .     \| ,          \`=.__.\`-'\\     \|
+\|                   \`.     /        \|     \|{\|              ,-.,\\     .\|
+\|                    \|   ,'          \\   / \`'            ,"     \\     \|
++30S                 \|  /             \|_'                \|  __  /     +
+\|                    \| \|                                 '-'  \`-'   \\.\|
+\|                    \|/                                        "    / \|
+\|                    \\.                                            '  \|
++60S                                                                  +
+\|                     ,/           ______._.--._ _..---.---------._   \|
+\|    ,-----"-..?----_/ )      _,-'"             "                  (  \|
+\|.._(                  \`-----'                                      \`-\|
++90S-+-----+-----+-----+-----+----+-----+-----+-----+-----+-----+-----+
+Map 1998 Matthew Thomas. Freely usable as long as this line is included
+`
+      worldMap.innerText =asciiMap;
+
+      let isDragging = false;
+      let startPosY = 0;
+      let startTop = 0;
+
+      line.addEventListener("mousedown", (event) => {
+        event.preventDefault(); // Prevent default behavior
+        isDragging = true;
+        startPosY = event.clientY;
+        startTop = line.offsetTop;
+      });
+
+      document.addEventListener("mousemove", (event) => {
+        if (isDragging) {
+          const offsetY = event.clientY - startPosY;
+          const newTop = startTop + offsetY;
+          const containerHeight = container.offsetHeight;
+          const lineHeight = line.offsetHeight;
+
+          // Restrict the line within the container
+          const minTop = 0;
+          const maxTop = containerHeight - lineHeight;
+          const restrictedTop = Math.max(minTop, Math.min(newTop, maxTop));
+
+          line.style.top = `${restrictedTop}px`;
+
+          // Calculate the position value
+          const positionOffset = restrictedTop - maxTop / 2;
+          const positionValue = Math.round((positionOffset / maxTop) * 90);
+
+          // Set the latitude text
+          //latitude.innerText = `Latitude: ${positionOffset < 0 ? "+" : "-"}${Math.abs(positionValue)}`;
+          const latitudeValue = Math.round((positionOffset / (maxTop / 2)) * 90);
+          latitude.innerText = `Latitude: ${latitudeValue >= 0 ? `-${latitudeValue}S` : `+${Math.abs(latitudeValue)}N`}`;
+
+          // Adjust the position of the latitude text
+          const lineRect = line.getBoundingClientRect();
+          const containerRect = container.getBoundingClientRect();
+          const containerTop = containerRect.top;
+          const lineTop = lineRect.top;
+
+          const latitudeTop = lineTop - containerTop + (lineHeight / 2);
+          latitude.style.top = `${latitudeTop}px`;
+
+
+
+        }
+        updateAdvice()
+      });
+
+      document.addEventListener("mouseup", () => {
+        isDragging = false;
+      });
+    });
+
+    //Skin Tone
+    var skinToneSlider = document.getElementById("skin-tone-slider");
+    var skinToneValue = document.getElementById("skin-tone-value");
+    var skinToneColor = document.getElementById("skin-tone-color");
+
+    //Based on Fitzpatrick scale https://en.wikipedia.org/wiki/Fitzpatrick_scale
+    skinToneSlider.oninput = function() {
+      var skinTone = "";
+      var color = "";
+      switch (this.value) {
+        case "1":
+          skinTone = "Type 1: Palest skin that always burns and never tans";
+          color = "#FFFFFF";
+          break;
+        case "2":
+          skinTone = "Type 2: Light coloured, but darker than fair skin that usually burns and tans minimally";
+          color = "#FFEDCF";
+          break;
+        case "3":
+          skinTone = "Type 3: Golden honey or olive skin that sometimes mild burns and tans uniformly";
+          color = "#EFCF78";
+          break;
+        case "4":
+          skinTone = "Type 4: Moderate brown skin that burns minimally and always tans well";
+          color = "#DAA507";
+          break;
+        case "5":
+          skinTone = "Type 5: Dark brown skin that very rarely burns and tans very easily";
+          color = "#97754B";
+          break;
+        case "6":
+          skinTone = "Type 6: Dark brown or darkest brown skin that never burns";
+          color = "#6F3A06";
+          break;
+      }
+      skinToneValue.innerHTML = skinTone;
+      skinToneColor.style.backgroundColor = color;
+      updateAdvice()
+
+    }
+
+    function updateAdvice() {
+
+      var currentLatitude = document.getElementById("latitude");
+      var skinToneValue = document.getElementById("skin-tone-slider").value;
+
+      currentLatitudeNumber = Math.abs(parseFloat(currentLatitude.innerText.replace(/[^\d.-]/g, '')));
+      
+      let adviceBox = document.getElementById("adviceBox");      
+      let adviceText = document.getElementById("adviceText"); 
+
+      //DEBUG
+      //console.trace("Latitude: " + currentLatitudeNumber);
+      //console.trace("skinTone: " + skinToneValue);
+      
+      //This bit could do with improvement.  E.g. like advice here from Manchester University that is specific to the UK 
+      //(Latitude 54N): https://www.britishskinfoundation.org.uk/sunlight-and-vitamin-d
+      //https://research.manchester.ac.uk/en/projects/sunlight-and-vitamin-d
+      //"Researchers at the University of Manchester have been looking into the relationships between 
+      //sunlight exposure and vitamin D. In simple terms, they have found that – for lighter skin types – 
+      //daily sunlight exposure for 10-15 minutes between April and September provides sufficient year-round 
+      //vitamin D while also minimising the risks of sunburn and skin cancer. For darker skin types, 25-40 minutes 
+      //is recommended.Importantly, levels of sunlight exposure that make an individual’s skin look pink or 
+      //sunburnt – either during or some hours after exposure – are too high and should always be avoided. People 
+      //with very light or sensitive skin and others who may not be able to follow this advice should seek further 
+      //guidance from their doctor about alternative sources of vitamin D."
+      // 
+      // Granularity of advice at the moment:
+      // ====================================
+      // Skin Tone  | 1 | 2 | 3 | 4 | 5 | 6 |
+      // Equatorial | 1 | 1 | 2 | 2 | 2 | 2 |
+      // Mid        | 3 | 3 | 4 | 4 | 4 | 4 |
+      // Polar      | 5 | 5 | 6 | 6 | 6 | 6 |
+      // ====================================
+      //
+      // Ideally, we have 18 (6 x 3) pieces of advice based on the 3 latitudes + 6 skin tone options
+      //
+      if (currentLatitudeNumber >= 0 && currentLatitudeNumber <= 24) {
+        if (skinToneValue >= 1 && skinToneValue <= 2) {
+          adviceText.textContent = "ADVICE TBD - SEEKING ADVICE!  PLACEHOLDER: equatorial - lighter skin 1: Based on scientific research, 5 minutes in the Sun during the summer months provides sufficient year-round vitamin D while also minimising the risks of sunburn and skin cancer. Importantly, levels of sunlight exposure that make an individual’s skin look pink or sunburnt – either during or some hours after exposure – are too high and should always be avoided. People with very light or sensitive skin and others who may not be able to follow this advice should seek further guidance from their doctor about alternative sources of vitamin D. https://research.manchester.ac.uk/en/projects/sunlight-and-vitamin-d";
+        } else if (skinToneValue >= 3 && skinToneValue <= 6) {
+          adviceText.textContent = "ADVICE TBD - SEEKING ADVICE!  PLACEHOLDER: equatorial - darker skin 2: Based on scientific research, 10-15 minutes in the Sun during the summer months provides sufficient year-round vitamin D while also minimising the risks of sunburn and skin cancer. Importantly, levels of sunlight exposure that make an individual’s skin look pink or sunburnt – either during or some hours after exposure – are too high and should always be avoided. People with very light or sensitive skin and others who may not be able to follow this advice should seek further guidance from their doctor about alternative sources of vitamin D. https://research.manchester.ac.uk/en/projects/sunlight-and-vitamin-d";
+        }
+      } else if (currentLatitudeNumber > 24 && currentLatitudeNumber <= 67) {
+        if (skinToneValue >= 1 && skinToneValue <= 2) {
+          adviceText.textContent = "ADVICE TBD - SEEKING ADVICE!  PLACEHOLDER: mid-latitudes - lighter skin 3: Based on scientific research, 10-15 minutes in the Sun during the summer months provides sufficient year-round vitamin D while also minimising the risks of sunburn and skin cancer. Importantly, levels of sunlight exposure that make an individual’s skin look pink or sunburnt – either during or some hours after exposure – are too high and should always be avoided. People with very light or sensitive skin and others who may not be able to follow this advice should seek further guidance from their doctor about alternative sources of vitamin D. https://research.manchester.ac.uk/en/projects/sunlight-and-vitamin-d";
+        } else if (skinToneValue >= 3 && skinToneValue <= 6) {
+          adviceText.textContent = "ADVICE TBD - SEEKING ADVICE!  PLACEHOLDER: mid-latitudes - darker skin 4: Based on scientific research, 25-40 minutes in the Sun during the summer months provides sufficient year-round vitamin D while also minimising the risks of sunburn and skin cancer. Importantly, levels of sunlight exposure that make an individual’s skin look pink or sunburnt – either during or some hours after exposure – are too high and should always be avoided. People with very light or sensitive skin and others who may not be able to follow this advice should seek further guidance from their doctor about alternative sources of vitamin D. https://research.manchester.ac.uk/en/projects/sunlight-and-vitamin-d";
+        }
+      } else if (currentLatitudeNumber > 67) {
+        if (skinToneValue >= 1 && skinToneValue <= 2) {
+          adviceText.textContent = "ADVICE TBD - SEEKING ADVICE!  PLACEHOLDER: polar - lighter skin 5: Based on scientific research, 25-40 minutes in the Sun during the summer months provides sufficient year-round vitamin D while also minimising the risks of sunburn and skin cancer. Importantly, levels of sunlight exposure that make an individual’s skin look pink or sunburnt – either during or some hours after exposure – are too high and should always be avoided. People with very light or sensitive skin and others who may not be able to follow this advice should seek further guidance from their doctor about alternative sources of vitamin D. https://research.manchester.ac.uk/en/projects/sunlight-and-vitamin-d";
+        } else if (skinToneValue >= 3 && skinToneValue <= 6) {
+          adviceText.textContent = "ADVICE TBD - SEEKING ADVICE!  PLACEHOLDER: polar - darker skin 6: Based on scientific research, 35-60 minutes in the Sun during the summer months provides sufficient year-round vitamin D while also minimising the risks of sunburn and skin cancer. Importantly, levels of sunlight exposure that make an individual’s skin look pink or sunburnt – either during or some hours after exposure – are too high and should always be avoided. People with very light or sensitive skin and others who may not be able to follow this advice should seek further guidance from their doctor about alternative sources of vitamin D. https://research.manchester.ac.uk/en/projects/sunlight-and-vitamin-d";
+        }
+      }
+    }
+
+    // Trigger the oninput event to update the skin tone value and color square
+    skinToneSlider.dispatchEvent(new Event('input'));
+
+  </script>
+</body>
+</html>
